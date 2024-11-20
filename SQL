@@ -1,0 +1,73 @@
+CREATE TABLE Destinations (
+    DestinationID INT PRIMARY KEY,
+    CityName VARCHAR(100),
+    CountryName VARCHAR(100),
+    EcoRating INT CHECK (EcoRating BETWEEN 1 AND 10),
+    Description TEXT
+);
+
+CREATE TABLE TransportModes (
+    ModeID INT PRIMARY KEY,
+    ModeName VARCHAR(50),
+    EmissionsPerKm DECIMAL(5, 2) -- CO2 in grams
+);
+
+CREATE TABLE Users (
+    UserID INT PRIMARY KEY,
+    UserName VARCHAR(100),
+    Email VARCHAR(150)
+);
+
+CREATE TABLE Trips (
+    TripID INT PRIMARY KEY,
+    UserID INT,
+    DestinationID INT,
+    ModeID INT,
+    DistanceKm DECIMAL(10, 2),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (DestinationID) REFERENCES Destinations(DestinationID),
+    FOREIGN KEY (ModeID) REFERENCES TransportModes(ModeID)
+);
+-- Insert destinations
+INSERT INTO Destinations VALUES 
+(1, 'Amsterdam', 'Netherlands', 9, 'Known for canals and eco-friendly initiatives'),
+(2, 'Kyoto', 'Japan', 8, 'Famous for temples and sustainable tourism'),
+(3, 'Reykjavik', 'Iceland', 10, 'Green energy capital with stunning landscapes');
+
+-- Insert transport modes
+INSERT INTO TransportModes VALUES 
+(1, 'Train', 14.0), 
+(2, 'Electric Car', 50.0),
+(3, 'Flight', 250.0);
+
+-- Insert users
+INSERT INTO Users VALUES 
+(1, 'Alice', 'alice@example.com'),
+(2, 'Bob', 'bob@example.com');
+
+-- Insert trips
+INSERT INTO Trips VALUES 
+(1, 1, 1, 1, 500),  -- Alice travels 500 km to Amsterdam by Train
+(2, 1, 2, 3, 900),  -- Alice travels 900 km to Kyoto by Flight
+(3, 2, 3, 2, 1000); -- Bob travels 1000 km to Reykjavik by Electric Car
+
+SELECT U.UserName,SUM(T.DistanceKm * TM.EmissionsPerKm) AS TotalCarbonFootprint
+FROM Trips T
+JOIN Users U ON T.UserID = U.UserID
+JOIN TransportModes TM ON T.ModeID = TM.ModeID
+GROUP BY U.UserName;
+
+SELECT U.UserName,D.CityName,(T.DistanceKm * TM.EmissionsPerKm) AS CarbonFootprint
+FROM Trips T
+JOIN Users U ON T.UserID = U.UserID
+JOIN Destinations D ON T.DestinationID = D.DestinationID
+JOIN TransportModes TM ON T.ModeID = TM.ModeID
+ORDER BY CarbonFootprint DESC;
+
+SELECT ModeName, EmissionsPerKm
+FROM TransportModes
+ORDER BY EmissionsPerKm ASC
+LIMIT 1;
+
+
+
